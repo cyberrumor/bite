@@ -10,8 +10,8 @@ pub fn textract(corpus: String) -> Vec<String> {
     result
 }
 
-pub fn gen_frequency(all_words: Vec<String>, sample_length: usize) -> HashMap<String, u64> {
-    let mut frequency_dict: HashMap<String, u64> = HashMap::new();
+pub fn gen_frequency(all_words: &Vec<String>, sample_length: usize) -> HashMap<String, usize> {
+    let mut frequency_dict: HashMap<String, usize> = HashMap::new();
 
     // prime
     let mut x: usize = 0;
@@ -21,7 +21,7 @@ pub fn gen_frequency(all_words: Vec<String>, sample_length: usize) -> HashMap<St
     while y <= all_words.len() {
         let progress: usize = ((y as f64 / all_words.len() as f64) * 100.0) as usize;
         if progress != last_progress {
-            eprint!("Progress: {:?}% \r", progress);
+            eprint!("Sample_length: {:?} Progress: {:?}% \r", sample_length, progress);
             last_progress = progress;
         }
         // get a slice of sample_length words
@@ -56,4 +56,6 @@ pub fn corpi_to_vec(filenames: &[String]) -> Vec::<String> {
     println!();
     all_words
 }
+
+
 
