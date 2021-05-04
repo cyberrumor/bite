@@ -1,11 +1,18 @@
 use std::fs;
 use std::collections::HashMap;
 
-pub fn textract(corpus: String) -> Vec<String> {
+pub fn tokenize_words(corpus: String) -> Vec<String> {
     let mut result: Vec::<String> = Vec::new();
     for word in corpus.to_lowercase().split_whitespace() {
-
         result.push(word.to_string());
+    }
+    result
+}
+
+pub fn tokenize_sent(corpus: String) -> Vec<String> {
+    let mut result: Vec::<String> = Vec::new();
+    for sentence in corpus.split(".") {
+        result.push(sentence.to_string());
     }
     result
 }
@@ -43,19 +50,23 @@ pub fn gen_frequency(all_words: &Vec<String>, sample_length: usize) -> HashMap<S
     frequency_dict
 }
 
-pub fn corpi_to_vec(filenames: &[String]) -> Vec::<String> {
-    let mut all_words: Vec<String> = Vec::new();
-    let mut index: usize = 1;
-    for file in filenames {
-        eprint!("Processing corpus {:?}/{:?}\r", index, filenames.len());
-        let corpus = fs::read_to_string(file)
-            .expect("Something went wrong reading the file");
-        all_words.extend(textract(corpus));
-        index += 1;
-    }
-    println!();
-    all_words
+pub fn stringify_corpus(file: String) -> String {
+    let result = fs::read_to_string(file)
+        .expect("Something went wrong reading the file");
+    result
 }
+
+pub fn remove_stopwords(corpus: Vec<String>, stopwords: Vec<String>) -> Vec<String> {
+    let mut vec: Vec<String> = Vec::new();
+    for word in corpus {
+        if stopwords.contains(&word) {
+            continue;
+        }
+        vec.push(word);
+    }
+    vec
+}
+
 
 
 
