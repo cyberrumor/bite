@@ -1,6 +1,18 @@
 use std::fs;
 use std::collections::HashMap;
 
+#[derive(Debug, Clone)]
+pub struct Sentence {
+    pub original: String,
+    pub stripped: String,
+    pub tokenized: Vec<String>,
+    pub trees: Vec<String>,
+    pub score: usize,
+}
+
+
+
+
 pub fn tokenize_words(corpus: &str) -> Vec<String> {
     let mut result: Vec::<String> = Vec::new();
     for word in corpus.to_lowercase().split_whitespace() {
@@ -97,23 +109,13 @@ pub fn strip_nonalpha(corpus: &str) -> String {
 }
 
 
-pub fn gen_frequency(all_words: &[String], sample_length: usize) -> HashMap<String, usize> {
+pub fn gen_heatmap(db: &Vec<Sentence>) -> HashMap<String, usize> {
     let mut frequency_dict: HashMap<String, usize> = HashMap::new();
-    let mut x: usize = 0;
-    let mut y: usize = sample_length;
-    while y <= all_words.len() {
-        let slice = &all_words[x..y];
-        let mut phrase = String::new();
-        for word in slice {
-            phrase.push_str(word);
-            phrase.push(' ');
+    for sent in db {
+        for tree in &sent.trees {
+            let count = frequency_dict.entry(tree.to_string()).or_insert(0);
+            *count += 1;
         }
-        let key = phrase.trim_end().to_string();
-        // insert key only if it doesn't exist yet, if it does, update it
-        let count = frequency_dict.entry(key).or_insert(0);
-        *count += 1;
-        y += 1;
-        x += 1;
     }
     frequency_dict
 }
@@ -126,20 +128,24 @@ pub fn stringify_corpus(file: String) -> String {
 }
 
 
-pub fn get_trees(sent: Vec<String>) -> Vec<Vec<String>> {
-    let mut trees: Vec<Vec<String>> = Vec::new();
-    if sent.len() < 2 {
-        trees.push(sent);
-        return trees;
-    }
+pub fn get_trees(sent: Vec<String>) -> Vec<String> {
+    let mut trees: Vec<String> = Vec::new();
+    //if sent.len() < 2 {
+    //    return sent;
+    //}
 
     for x in 0..sent.len() {
         let mut y: usize = x + 2;
         while y <= sent.len() {
             let vec: Vec<String> = sent[x..y].to_vec();
-            if vec.len() > 1 {
-                trees.push(vec)
+            let mut phrase: String = String::new();
+            for word in &vec {
+                phrase.push_str(word);
+                phrase.push(' ');
             }
+
+            let result = phrase.trim_end().to_string();
+            trees.push(result);
             y += 1
         }
     }
