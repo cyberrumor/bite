@@ -7,7 +7,7 @@ pub struct Sentence {
     pub stripped: String,
     pub tokenized: Vec<String>,
     pub trees: Vec<String>,
-    pub score: usize,
+    pub score: f64,
 }
 
 
