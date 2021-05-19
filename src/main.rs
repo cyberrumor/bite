@@ -58,7 +58,7 @@ fn main() {
         for tree in &s.trees {
             score += *heatmap.get(tree).unwrap();
         }
-        s.score = score as f64 / lengths as f64;
+        s.score = score as f64 / ave_length as f64;
     }
 
     // get the average scores and length
@@ -69,12 +69,10 @@ fn main() {
     let ave_score: f64 = all_scores as f64 / db.len() as f64;
 
     let mut summary: String = String::new();
-    let mut summary_sentences: usize = 0;
     for s in &db {
         if s.score as f64 > ave_score * 2.0 {
             summary.push_str(&s.original);
             summary.push(' ');
-            summary_sentences += 1;
 
         }
 

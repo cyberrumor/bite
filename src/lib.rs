@@ -10,9 +10,6 @@ pub struct Sentence {
     pub score: f64,
 }
 
-
-
-
 pub fn tokenize_words(corpus: &str) -> Vec<String> {
     let mut result: Vec::<String> = Vec::new();
     for word in corpus.to_lowercase().split_whitespace() {
