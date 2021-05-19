@@ -51,8 +51,8 @@ pub fn tokenize_sent(corpus: &str) -> Vec<String> {
             | sentence.ends_with("Ms.")
             | sentence.ends_with("Dr.")
             | sentence.ends_with("Mr.")
-            // if it ends with a period and isn't a title, the last leter before the period should
-            // be lowercase. Otherwise, it must be a middle initial or an acronym.
+            // if it ends with a period and isn't a title, the last leter before
+            // the period be lowercase. Otherwise, it must be a middle initial or an acronym.
             | &words[index - 1].clone().chars().nth(second_to_last).unwrap().is_uppercase() {
                 punctuation = false;
             } else {
@@ -65,12 +65,17 @@ pub fn tokenize_sent(corpus: &str) -> Vec<String> {
         | sentence.ends_with(")\"")
         | sentence.ends_with('\"')
         | sentence.ends_with('”')
-        | sentence.ends_with(")”") {
+        | sentence.ends_with(")”")
+        // workaround wikipedia references at sentence end
+        | sentence.ends_with(']') {
             punctuation = true;
         }
 
         // a sentence needs balanced parentheses.
         if sentence.matches('(').count() != sentence.matches(')').count() {
+            continue;
+        }
+        if sentence.matches('[').count() != sentence.matches(']').count() {
             continue;
         }
 

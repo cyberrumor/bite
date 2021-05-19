@@ -44,36 +44,34 @@ fn main() {
 
 
     let heatmap: HashMap<String, usize> = lib::gen_heatmap(&db);
-    // println!("{:?}", heatmap);
 
-    // get the average length of sentences
-    let mut length: usize = 0;
+    // get average lengths
+    let mut lengths: usize = 0;
     for s in &db {
-        length += s.tokenized.len();
+        lengths += s.trees.len();
     }
-    let ave_length: f64 = length as f64 / db.len() as f64;
+    let ave_length: f64 = lengths as f64 / db.len() as f64;
 
     // give each tree a score
     for s in &mut db {
-        let mut score: f64 = 0.0;
+        let mut score: usize = 0;
         for tree in &s.trees {
-            score += *heatmap.get(tree).unwrap() as f64;
-            s.score = score / ave_length;
+            score += *heatmap.get(tree).unwrap();
         }
+        s.score = score as f64 / lengths as f64;
     }
 
-    // get the average scores
+    // get the average scores and length
     let mut all_scores: f64 = 0.0;
     for s in &db {
         all_scores += s.score;
     }
     let ave_score: f64 = all_scores as f64 / db.len() as f64;
-    
 
     let mut summary: String = String::new();
     let mut summary_sentences: usize = 0;
     for s in &db {
-        if s.score > ave_score * 2.0 {
+        if s.score as f64 > ave_score * 2.0 {
             summary.push_str(&s.original);
             summary.push(' ');
             summary_sentences += 1;
@@ -82,9 +80,6 @@ fn main() {
 
     }
     summary = summary.trim_end().to_string();
-    println!("summary: {:?}", &summary);
-    println!("sentences: {:?}", db.len());
-    println!("summary sentences: {:?}", summary_sentences);
-            
+    println!("{:?}", summary); 
 
 }
