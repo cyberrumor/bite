@@ -70,7 +70,7 @@ fn main() {
 
     let mut summary: String = String::new();
     for s in &db {
-        if s.score as f64 > ave_score * 2.0 {
+        if s.score as f64 > ave_score * 2.5 {
             summary.push_str(&s.original);
             summary.push(' ');
 
@@ -79,5 +79,77 @@ fn main() {
     }
     summary = summary.trim_end().to_string();
     println!("{:?}", summary); 
+    println!();
+
+
+
+
+
+    // begin text generation
+
+    // get a heatmap of the most common endings
+    // let endmap: HashMap<String, usize> = lib::gen_sidemap(&db, "end".to_string());
+    let begmap: HashMap<String, usize> = lib::gen_sidemap(&db, "beg".to_string());
+
+    let mut generated_sentence: String = String::new();
+    let mut last_choice: Vec<String> = Vec::new();
+
+    // prime generated sentence and last choice
+    {
+        let mut tval: usize = 0;
+        for (key, value) in begmap.iter() {
+            if value > &tval {
+                tval = *value;
+                last_choice.push(key.to_string());
+            }
+        }
+        generated_sentence.push_str(&last_choice.last().unwrap());
+        generated_sentence.push(' ');
+    }
+
+
+    // loop {
+    //    let mut most_common: String = String::new();
+    //    let mut tval: usize = 0;
+    //    let last_word: String = last_choice
+    //        .last()
+    //        .unwrap()
+    //        .split_whitespace()
+    //        .last()
+    //        .unwrap()
+    //        .to_string();
+
+    //    for (key, value) in heatmap.iter() {
+    //        let first_word: String = key.split_whitespace().next().unwrap().to_string();
+    //        if !last_choice.contains(&key.to_string())
+    //        && !first_word.is_empty()
+    //        && first_word == last_word {
+    //            // println!("key: {:?} value: {:?} tval: {:?}", key, value, tval);
+    //            if value > &tval {
+    //                most_common = key.to_string();
+    //                tval = *value;
+    //            }
+    //        }
+    //    }
+    //    // generated_sentence.push_str(&most_common);
+    //    last_choice.push(most_common.clone());
+    //    let last_word: String = most_common
+    //       .clone()
+    //        .split_whitespace()
+    //        .last()
+    //        .unwrap()
+    //        .to_string();
+
+    //    generated_sentence.push_str(&last_word);
+    //    generated_sentence.push(' ');
+    //    if endmap.get(&most_common).is_none() {
+    //        continue;
+    //    } else if endmap.get(&most_common).unwrap() * 3 >= *heatmap.get(&most_common).unwrap() {
+    //        break;
+    //    }
+
+    //}
+    let result = generated_sentence.trim();
+    println!("{:?}", result);
 
 }

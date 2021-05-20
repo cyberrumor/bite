@@ -41,8 +41,13 @@ pub fn tokenize_sent(corpus: &str) -> Vec<String> {
         let mut punctuation: bool = false;
 
         // identify if the sentence ends with punctuation.
+        let second_to_last: usize = &words[index - 1].chars().count() - 2;
+        if second_to_last > 500 {
+            result.push(sentence.clone());
+            sentence.clear();
+            continue;
+        }
         if sentence.ends_with('.') {
-            let second_to_last: usize = &words[index - 1].chars().count() - 2;
             if sentence.ends_with("Mr.")
             | sentence.ends_with("Mrs.")
             | sentence.ends_with("Ms.")
@@ -56,7 +61,6 @@ pub fn tokenize_sent(corpus: &str) -> Vec<String> {
                 // it's a valid end-of-sentence period.
                 punctuation = true;
             }
-
         } else if sentence.ends_with('?')
         | sentence.ends_with('!')
         | sentence.ends_with(")\"")
@@ -112,15 +116,45 @@ pub fn strip_nonalpha(corpus: &str) -> String {
 
 
 pub fn gen_heatmap(db: &Vec<Sentence>) -> HashMap<String, usize> {
-    let mut frequency_dict: HashMap<String, usize> = HashMap::new();
+    let mut freq_dict: HashMap<String, usize> = HashMap::new();
     for sent in db {
         for tree in &sent.trees {
-            let count = frequency_dict.entry(tree.to_string()).or_insert(0);
+            let count = freq_dict.entry(tree.to_string()).or_insert(0);
             *count += 1;
         }
     }
-    frequency_dict
+    freq_dict
 }
+
+pub fn gen_sidemap(db: &Vec<Sentence>, side: String) -> HashMap<String, usize> {
+    let mut freq_dict: HashMap<String, usize> = HashMap::new();
+    for sent in db {
+        if sent.trees.len() == 0 {
+            continue;
+        }
+        let first_tree: String = sent.trees[0].clone();
+        let last_tree: Option<_> = sent.trees.last();
+        if side == "beg".to_string() {
+            let tree: &String = &first_tree;
+            let count = freq_dict.entry(tree.to_string()).or_insert(0);
+            *count += 1;
+
+        } else {
+
+            if let None = last_tree {
+                continue;
+            }
+            let tree: &String = last_tree.unwrap();
+            let count = freq_dict.entry(tree.to_string()).or_insert(0);
+            *count += 1;
+
+        }
+    }
+    freq_dict
+}
+
+
+
 
 pub fn stringify_corpus(file: String) -> String {
     let corpus = fs::read_to_string(file)
