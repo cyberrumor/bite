@@ -19,7 +19,7 @@ Slices:
 - a little lamb
 - little lamb
 
-From here, it generates a frequency map and scores each sentence based on the map, dividing each sentence score by the average sentence length. Any sentence that scores over double the average score is included in the output. For those interested, a summary of Alice in Wonderland can be found [here](https://github.com/cyberrumor/bite/blob/main/summary_example.txt). 
+From here, it generates a frequency map and scores each sentence based on the map, dividing each sentence score by the average sentence length. Any sentence that scores over double the average score is included in the output. For those interested, a summary of Alice in Wonderland can be found [here](https://github.com/cyberrumor/bite/blob/main/summary_example.txt). Reddit [reports](https://www.reddit.com/r/LanguageTechnology/comments/nggaag/is_this_approach_to_summary_production_novel/) this is an [n-gram](https://en.wikipedia.org/wiki/N-gram) [Markov](https://en.wikipedia.org/wiki/Markov_model) model.
 
 # installation
 ```
