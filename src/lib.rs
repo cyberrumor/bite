@@ -10,6 +10,76 @@ pub struct Sentence {
     pub score: f64,
 }
 
+#[must_use]
+pub fn run(filenames: &[String]) -> String {
+    // stringify corpora
+    let mut corpora: String = String::new();
+    for file in filenames {
+        let corpus: String = stringify_corpus(file.clone());
+        corpora.push_str(&" ");
+        corpora.push_str(&corpus);
+    }
+
+    // split into sentences
+    let original_sentences: Vec<String> = tokenize_sent(&corpora);
+
+    // create sentence objects
+    let mut db: Vec<Sentence> = Vec::new();
+    for original in original_sentences {
+        let stripped: String = strip_nonalpha(&original.clone().to_lowercase());
+        let tokenized: Vec<String> = tokenize_words(&stripped);
+        let trees: Vec<String> = get_trees(&tokenized);
+        let object: Sentence = Sentence {
+            original,
+            stripped,
+            tokenized,
+            trees,
+            score: 0.0,
+        };
+        db.push(object)
+    }
+
+    let heatmap: HashMap<String, usize> = gen_heatmap(&db);
+
+    // get average lengths
+    let mut lengths: usize = 0;
+    for s in &db {
+        lengths += s.trees.len();
+    }
+    let ave_length: f64 = lengths as f64 / db.len() as f64;
+
+    // give each tree a score. If a tree somehow isn't in heatmap,
+    // add zero.
+    for s in &mut db {
+        let mut score: usize = 0;
+        for tree in &s.trees {
+            score += *heatmap.get(tree).unwrap_or(&0);
+        }
+        s.score = score as f64 / ave_length as f64;
+    }
+
+    // get the average scores and length
+    let mut all_scores: f64 = 0.0;
+    for s in &db {
+        all_scores += s.score;
+    }
+    let ave_score: f64 = all_scores as f64 / db.len() as f64;
+
+    // produce summary
+    let mut summary: String = String::new();
+    for s in &db {
+        if s.score as f64 > ave_score * 2.5 {
+            summary.push_str(&s.original);
+            summary.push(' ');
+
+        }
+
+    }
+    summary = summary.trim_end().to_string();
+    summary
+}
+
+#[must_use]
 pub fn tokenize_words(corpus: &str) -> Vec<String> {
     let mut result: Vec::<String> = Vec::new();
     for word in corpus.to_lowercase().split_whitespace() {
@@ -18,6 +88,7 @@ pub fn tokenize_words(corpus: &str) -> Vec<String> {
     result
 }
 
+#[must_use]
 pub fn tokenize_sent(corpus: &str) -> Vec<String> {
     let mut result: Vec::<String> = Vec::new();
     // collect words until the result is a sentence
@@ -42,11 +113,6 @@ pub fn tokenize_sent(corpus: &str) -> Vec<String> {
 
         // identify if the sentence ends with punctuation.
         let second_to_last: usize = &words[index - 1].chars().count() - 2;
-        if second_to_last > 500 {
-            result.push(sentence.clone());
-            sentence.clear();
-            continue;
-        }
         if sentence.ends_with('.') {
             if sentence.ends_with("Mr.")
             | sentence.ends_with("Mrs.")
@@ -54,8 +120,15 @@ pub fn tokenize_sent(corpus: &str) -> Vec<String> {
             | sentence.ends_with("Dr.")
             | sentence.ends_with("Mr.")
             // if it ends with a period and isn't a title, the last leter before
-            // the period be lowercase. Otherwise, it must be a middle initial or an acronym.
-            | &words[index - 1].clone().chars().nth(second_to_last).unwrap().is_uppercase() {
+            // the period be lowercase. Otherwise, it must be a middle initial 
+            // or an acronym. If chars is somehow empty, call it lowercase.
+            | words[index - 1]
+            .clone()
+            .chars()
+            .nth(second_to_last)
+            // .unwrap_or('a')
+            .unwrap()
+            .is_uppercase() {
                 punctuation = false;
             } else {
                 // it's a valid end-of-sentence period.
@@ -91,7 +164,13 @@ pub fn tokenize_sent(corpus: &str) -> Vec<String> {
         }
 
         // the first letter of the next word should be uppercase.
-        if index < words.len() && words[index].chars().next().unwrap().is_lowercase() {
+        // if there's no next word, call it uppercase and end sentence.
+        if index < words.len()
+        && words[index]
+        .chars()
+        .next()
+        .unwrap_or('A')
+        .is_lowercase() {
             continue;
         }
 
@@ -103,7 +182,7 @@ pub fn tokenize_sent(corpus: &str) -> Vec<String> {
     result
 }
 
-
+#[must_use]
 pub fn strip_nonalpha(corpus: &str) -> String {
     let mut result: String = String::new();
     for character in corpus.chars() {
@@ -114,8 +193,8 @@ pub fn strip_nonalpha(corpus: &str) -> String {
     result
 }
 
-
-pub fn gen_heatmap(db: &Vec<Sentence>) -> HashMap<String, usize> {
+#[must_use]
+pub fn gen_heatmap(db: &[Sentence]) -> HashMap<String, usize> {
     let mut freq_dict: HashMap<String, usize> = HashMap::new();
     for sent in db {
         for tree in &sent.trees {
@@ -126,36 +205,7 @@ pub fn gen_heatmap(db: &Vec<Sentence>) -> HashMap<String, usize> {
     freq_dict
 }
 
-pub fn gen_sidemap(db: &Vec<Sentence>, side: String) -> HashMap<String, usize> {
-    let mut freq_dict: HashMap<String, usize> = HashMap::new();
-    for sent in db {
-        if sent.trees.len() == 0 {
-            continue;
-        }
-        let first_tree: String = sent.trees[0].clone();
-        let last_tree: Option<_> = sent.trees.last();
-        if side == "beg".to_string() {
-            let tree: &String = &first_tree;
-            let count = freq_dict.entry(tree.to_string()).or_insert(0);
-            *count += 1;
-
-        } else {
-
-            if let None = last_tree {
-                continue;
-            }
-            let tree: &String = last_tree.unwrap();
-            let count = freq_dict.entry(tree.to_string()).or_insert(0);
-            *count += 1;
-
-        }
-    }
-    freq_dict
-}
-
-
-
-
+#[must_use]
 pub fn stringify_corpus(file: String) -> String {
     let corpus = fs::read_to_string(file)
         .expect("Something went wrong reading the file");
@@ -163,8 +213,8 @@ pub fn stringify_corpus(file: String) -> String {
     result
 }
 
-
-pub fn get_trees(sent: Vec<String>) -> Vec<String> {
+#[must_use]
+pub fn get_trees(sent: &[String]) -> Vec<String> {
     let mut trees: Vec<String> = Vec::new();
     //if sent.len() < 2 {
     //    return sent;
@@ -188,9 +238,6 @@ pub fn get_trees(sent: Vec<String>) -> Vec<String> {
 
     trees
 }
-
-
-
 
 
 
